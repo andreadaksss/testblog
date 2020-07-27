@@ -83,33 +83,45 @@ class PostController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = $request->input();
-        $validate = Validator::make($data, [
+        $permission = Posts::where('post_id', $id)->first();
+        if($permission->user_id == Auth::id()){
+            // return "You are the creator, you are verified to update!";
+            $data = $request->input();
+            $validate = Validator::make($data, [
 			'title' => 'required|string|max:255',
             'content' => 'required|string|max:255',
-        ]);
-
-        if($validate -> fails()){
-            return redirect('blog.edit')-> withInput()-> withErrors($validate);
-       }
-
-       else{
-        try{
-            $post = Posts::where('post_id', $id)->update([
-                'post_title' => $data['title'],
-                'post_content' => $data['content']
             ]);
-            return 'Successfully updated blog!';
-        }
-        catch(Exception $e){
-            return "Update failed";
+
+            if($validate -> fails()){
+                return redirect('blog.edit')-> withInput()-> withErrors($validate);
+            }else{
+                try{
+                    $post = Posts::where('post_id', $id)->update([
+                        'post_title' => $data['title'],
+                        'post_content' => $data['content']
+                    ]);
+                    return 'Successfully updated blog!';
+                }
+                catch(Exception $e){
+                    return "Update failed";
+                    }
             }
+        }else{
+            return "You are not auhtorized to update blog!";
         }
+
     }
 
 
     public function destroy($id)
     {
-        //
+        $permission = Posts::where('post_id', $id)->first();
+            if ($permission->user_id == Auth::id()) {
+                $post = Posts::where('post_id', $id)->delete();
+                return 'Successfully deleted blog!';
+            }else{
+                return "You are not auhtorized to delete blog!";
+            }
+
     }
 }
